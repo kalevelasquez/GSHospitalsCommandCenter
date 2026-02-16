@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    :root {
+      --primary: #2563eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --info: #0ea5e9;
+      --bg: #f9fafb;
+      --text-main: #1f2937;
+      --border: #e5e7eb;
+    }
+
+    body { padding: 24px; font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-main); font-size: 0.875rem; }
+    .header-container { margin-bottom: 2rem; }
+    .page-title { font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; }
+    .nav-pills { background: #eee; padding: 4px; border-radius: 8px; display: inline-flex; }
+    .nav-pills .nav-link { border-radius: 6px; color: #6b7280; font-weight: 500; transition: all 0.2s; padding: 6px 16px; cursor: pointer; }
+    .nav-pills .nav-link.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    
+    .filter-section { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 24px; }
+    .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding-bottom: 10px; }
+    
+    .btn-action { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; border: 1px solid var(--border); background: white; color: #64748b; text-decoration: none; cursor:pointer; }
+    .btn-view:hover { color: var(--info); border-color: var(--info); background: #f0f9ff; }
+    .btn-edit:hover { color: var(--primary); border-color: var(--primary); background: #eff6ff; }
+    .btn-delete:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+    .btn-restore:hover { color: var(--success); border-color: var(--success); background: #f0fdf4; }
+
+    /* Paginación más pequeña y estilizada */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+      padding: 0.25rem 0.5rem !important;
+      font-size: 0.75rem !important;
+      margin-left: 3px !important;
+      border-radius: 6px !important;
+      border: 1px solid var(--border) !important;
+      background: white !important;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+      background: var(--primary) !important;
+      color: white !important;
+      border-color: var(--primary) !important;
+    }
+    .dataTables_length select {
+      border-radius: 6px !important;
+      padding: 0.2rem 1.5rem 0.2rem 0.5rem !important;
+      font-size: 0.8rem !important;
+    }
+    .dataTables_info { font-size: 0.75rem; color: #64748b; }
+
+    /* Visor Overlay */
+    #visorOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.7); display: none; z-index: 9999;
+      backdrop-filter: blur(4px); align-items: center; justify-content: center;
+    }
+    .visor-content { background: #f8fafc; width: 95%; max-width: 1100px; height: 90%; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+    .visor-header { padding: 15px 24px; background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .visor-body { flex: 1; overflow-y: auto; padding: 24px; }
+    .viewer-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 18px; margin-bottom: 15px; }
+    .data-label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+    .data-value { font-size: 0.88rem; font-weight: 500; color: #1e293b; margin-bottom: 10px; }
+    .section-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary); margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <div id="visorOverlay">
+    <div class="visor-content">
+      <div class="visor-header">
+        <div>
+          <h5 class="m-0 fw-bold" id="vHeadName">Hospital Details</h5>
+          <span class="badge bg-light text-primary border" id="vHeadID">ID: ---</span>
+        </div>
+        <div class="d-flex gap-2">
+           <button class="btn btn-primary btn-sm px-3" id="btnEditFromVisor" onclick="editFromVisor()"><i class="fa-solid fa-pen-to-square"></i> Edit Record</button>
+           <button class="btn-close" onclick="cerrarVisor()"></button>
+        </div>
+      </div>
+      <div class="visor-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="viewer-card">
+              <div class="section-title"><i class="fa-solid fa-location-dot"></i> General Info</div>
+              <div class="data-label">Address</div><div id="vAddress" class="data-value">-</div>
+              <div class="row"><div class="col-6"><div class="data-label">City</div><div id="vCity" class="data-value">-</div></div><div class="col-6"><div class="data-label">Zip</div><div id="vZip" class="data-value">-</div></div></div>
+              <div class="row"><div class="col-6"><div class="data-label">State</div><div id="vState" class="data-value">-</div></div><div class="col-6"><div class="data-label">County</div><div id="vCounty" class="data-value">-</div></div></div>
+              <div class="data-label">Website</div><div id="vWebsite" class="data-value">-</div>
+              <div class="data-label">Main Phone</div><div id="vPhone" class="data-value">-</div>
+              <div class="data-label">Health System</div><div id="vHealthSystem" class="data-value">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="viewer-card">
+              <div class="section-title"><i class="fa-solid fa-file-medical"></i> Medical Records</div>
+              <div class="data-label">Phone / Fax</div><div id="vMrPhoneFax" class="data-value">-</div>
+              <div class="data-label">Email</div><div id="vMrEmail" class="data-value">-</div>
+              <div class="data-label">Portal</div><div id="vMrPortal" class="data-value">-</div>
+              <hr><div class="data-label">Copy Service</div><div id="vCopyService" class="data-value">-</div>
+              <div class="data-label">PI Vol / Method</div><div id="vPiReq" class="data-value">-</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="viewer-card">
+              <div class="section-title"><i class="fa-solid fa-file-invoice-dollar"></i> Billing Contacts</div>
+              <div class="data-label">Hospital Billing</div><div id="vHospBillFull" class="data-value small">-</div><hr>
+              <div class="data-label">Physician Billing</div><div id="vPhysBillFull" class="data-value small">-</div><hr>
+              <div class="data-label">Radiology Billing</div><div id="vRadBillFull" class="data-value small">-</div><hr>
+              <div class="data-label">ER Billing</div><div id="vErBillFull" class="data-value small">-</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="viewer-card" style="border-left: 4px solid var(--primary);">
+              <div class="row">
+                <div class="col-md-6"><div class="section-title">Special Instructions</div><div id="vSpecInstr" class="data-value" style="white-space: pre-wrap;">-</div></div>
+                <div class="col-md-6"><div class="section-title">Internal Notes</div><div id="vIntNotes" class="data-value" style="white-space: pre-wrap;">-</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="header-container d-flex justify-content-between align-items-center">
+      <h4 class="page-title m-0">Hospital Database</h4>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3" onclick="addNew()" style="border-radius:8px"><i class="fa-solid fa-plus"></i> Add Hospital</button>
+        <button class="btn btn-light btn-sm d-flex align-items-center gap-2 border px-3" onclick="cargarDatos()" style="border-radius:8px"><i class="fa-solid fa-rotate"></i> Refresh</button>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <ul class="nav nav-pills">
+        <li class="nav-item"><a class="nav-link active" id="tab-active" onclick="cambiarVista('Active')">Active</a></li>
+        <li class="nav-item"><a class="nav-link" id="btnRecycleBin" style="display:none;" onclick="cambiarVista('Deleted')">Recycle Bin</a></li>
+      </ul>
+    </div>
+
+    <div class="filter-section">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label text-muted small fw-medium">State</label>
+          <select id="filterState" class="form-select form-select-sm" onchange="aplicarFiltros()"><option value="">All States</option></select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label text-muted small fw-medium">County</label>
+          <select id="filterCounty" class="form-select form-select-sm" onchange="aplicarFiltros()"><option value="">All Counties</option></select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFiltros()" style="border-radius: 8px; padding: 6px;">Reset Filters</button>
+        </div>
+        <div class="col-md-4 d-flex justify-content-end">
+          <div id="searchBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table id="tablaHospitales" class="table table-hover w-100">
+        <thead><tr><th>ID</th><th>Hospital Name</th><th>State</th><th>County</th><th>City</th><th>Phone</th><th>Health System</th><th class="text-center">Actions</th></tr></thead>
+        <tbody id="cuerpoTabla"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+  <script>
+    let vistaActual = 'Active';
+    let todosLosDatos = [];
+    let tablaDT;
+    let currentViewingID = null;
+
+    $(document).ready(function() {
+      google.script.run.withSuccessHandler(isAdmin => { if(isAdmin) $('#btnRecycleBin').show(); }).esAdmin();
+      cargarDatos();
+    });
+
+    function cargarDatos() {
+      Swal.fire({ title: 'Loading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run.withSuccessHandler(datos => {
+        todosLosDatos = datos;
+        poblarSelectores(datos);
+        mostrarTabla();
+        Swal.close();
+      }).obtenerTodosLosHospitales();
+    }
+
+    function poblarSelectores(datos) {
+      const states = [...new Set(datos.map(f => f[2]))].filter(Boolean).sort();
+      const counties = [...new Set(datos.map(f => f[3]))].filter(Boolean).sort();
+      $('#filterState').html('<option value="">All States</option>').append(states.map(s => `<option value="${s}">${s}</option>`));
+      $('#filterCounty').html('<option value="">All Counties</option>').append(counties.map(c => `<option value="${c}">${c}</option>`));
+    }
+
+    function cambiarVista(tipo) {
+      vistaActual = tipo;
+      $('.nav-link').removeClass('active');
+      tipo === 'Active' ? $('#tab-active').addClass('active') : $('#btnRecycleBin').addClass('active');
+      mostrarTabla();
+    }
+
+    function mostrarTabla() {
+      let filas = "";
+      const datosFiltrados = todosLosDatos.filter(f => {
+        let status = f[11] ? String(f[11]).trim() : "Active";
+        return vistaActual === 'Active' ? (status === 'Active' || status === '') : (status === 'Deleted');
+      });
+
+      datosFiltrados.forEach(fila => {
+        let acciones = "";
+        let infoAudit = "";
+        const btnVer = `<button class="btn-action btn-view" title="View" onclick="verDetalles('${fila[0]}')"><i class="fa-solid fa-eye"></i></button>`;
+
+        if(vistaActual === 'Active') {
+          acciones = `<div class="d-flex justify-content-center gap-2">${btnVer}<button class="btn-action btn-edit" onclick="editar('${fila[0]}')"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="confirmarEliminar('${fila[0]}', '${fila[1]}')"><i class="fa-solid fa-trash"></i></button></div>`;
+        } else {
+          const fechaStr = fila[12] ? new Date(fila[12]).toLocaleDateString() : 'N/A';
+          infoAudit = `<br><span style="font-size:0.7rem; color:#94a3b8">Deleted: ${fechaStr} by ${fila[13] || 'System'}</span>`;
+          acciones = `<div class="d-flex justify-content-center gap-2">${btnVer}<button class="btn-action btn-restore" onclick="restaurar('${fila[0]}')"><i class="fa-solid fa-arrow-rotate-left"></i></button><button class="btn-action btn-delete" onclick="confirmarPermanente('${fila[0]}', '${fila[1]}')"><i class="fa-solid fa-fire"></i></button></div>`;
+        }
+        filas += `<tr><td>${fila[0]}</td><td><span class="fw-semibold">${fila[1]}</span>${infoAudit}</td><td>${fila[2]}</td><td>${fila[3]}</td><td>${fila[4]}</td><td>${fila[9]}</td><td>${fila[5]}</td><td class="text-center">${acciones}</td></tr>`;
+      });
+      
+      if ($.fn.DataTable.isDataTable('#tablaHospitales')) tablaDT.destroy();
+      $('#cuerpoTabla').html(filas);
+      $('#searchBox').empty();
+      
+      tablaDT = $('#tablaHospitales').DataTable({ 
+        pageLength: 10,
+        dom: '<"d-flex justify-content-between align-items-center"f>rt<"d-flex justify-content-between align-items-center mt-3"lip>', 
+        language: { 
+          search: "", 
+          searchPlaceholder: "Search...",
+          lengthMenu: "_MENU_ entries",
+          paginate: { previous: '<i class="fa-solid fa-chevron-left"></i>', next: '<i class="fa-solid fa-chevron-right"></i>' }
+        } 
+      });
+      $('#searchBox').append($('.dataTables_filter'));
+    }
+
+    function aplicarFiltros() { tablaDT.column(2).search($('#filterState').val()).column(3).search($('#filterCounty').val()).draw(); }
+    function resetFiltros() { $('#filterState, #filterCounty').val(""); tablaDT.search('').columns().search('').draw(); }
+
+    function verDetalles(id) {
+      currentViewingID = id;
+      Swal.fire({ title: 'Fetching Data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      google.script.run.withSuccessHandler(datos => {
+        const h = datos.hosp; const b = datos.bill;
+        $('#vHeadName').text(h[1]); $('#vHeadID').text('ID: ' + h[0]);
+        $('#vAddress').text(h[6]); $('#vCity').text(h[4]); $('#vZip').text(h[7]); $('#vState').text(h[2]); $('#vCounty').text(h[3]);
+        $('#vWebsite').html(h[8] ? `<a href="${h[8]}" target="_blank">${h[8]}</a>` : 'N/A');
+        $('#vPhone').text(h[9]); $('#vPiVolume').text(h[10]); $('#vHealthSystem').text(h[5]);
+        if(b) {
+          $('#vMrPhoneFax').text(`P: ${b[2] || '-'} / F: ${b[3] || '-'}`); $('#vMrEmail').text(b[4] || '-'); $('#vMrPortal').text(b[5] || '-');
+          $('#vCopyService').text(b[6] || '-'); $('#vPiReq').text(`Vol: ${h[10] || '-'} / Method: ${b[7] || '-'}`);
+          $('#vHospBillFull').html(`P: ${b[13] || '-'}<br>F: ${b[14] || '-'}<br>E: ${b[15] || '-'}<br>A: ${b[16] || '-'}`);
+          $('#vPhysBillFull').html(`Co: ${b[17] || '-'}<br>P: ${b[18] || '-'}<br>F: ${b[19] || '-'}<br>E: ${b[20] || '-'}`);
+          $('#vRadBillFull').html(`Co: ${b[22] || '-'}<br>P: ${b[23] || '-'}<br>F: ${b[24] || '-'}<br>E: ${b[25] || '-'}`);
+          $('#vErBillFull').html(`Co: ${b[37] || '-'}<br>Contact: ${b[38] || '-'}`);
+          $('#vSpecInstr').text(b[39] || 'No instructions.'); $('#vIntNotes').text(b[41] || 'No notes.');
+        }
+        Swal.close(); $('#visorOverlay').css('display', 'flex');
+      }).obtenerDatosPorId(id);
+    }
+
+    function editFromVisor() { if(currentViewingID) editar(currentViewingID); }
+    function cerrarVisor() { $('#visorOverlay').hide(); currentViewingID = null; }
+    function addNew() { google.script.run.abrirFormulario(); google.script.host.close(); }
+    function editar(id) {
+      google.script.run.withSuccessHandler(datos => {
+        google.script.run.abrirFormularioEdicion(datos);
+        setTimeout(() => google.script.host.close(), 500);
+      }).obtenerDatosPorId(id);
+    }
+    function restaurar(id) { google.script.run.withSuccessHandler(() => cargarDatos()).restaurarHospital(id); }
+    function confirmarEliminar(id, nombre) {
+      Swal.fire({ title: 'Delete?', text: `Move ${nombre} to Bin?`, icon: 'warning', showCancelButton: true }).then(r => {
+        if(r.isConfirmed) google.script.run.withSuccessHandler(() => cargarDatos()).eliminarHospital(id);
+      });
+    }
+    function confirmarPermanente(id, nombre) {
+      Swal.fire({ title: 'Permanent Delete?', icon: 'error', showCancelButton: true }).then(r => {
+        if(r.isConfirmed) google.script.run.withSuccessHandler(() => cargarDatos()).eliminarDefinitivamente(id);
+      });
+    }
+  </script>
+</body>
+</html>
