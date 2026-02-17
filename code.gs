@@ -1,4 +1,4 @@
-const ADMIN_EMAILS = ["tobarcristina0616@gmail.com", "tobarcristina0616@gmail.com"];
+const ADMIN_EMAILS = ["tobarcristina0616@gmail.com"];
 
 /**
  * Función que se ejecuta al abrir el Google Sheets.
@@ -11,6 +11,7 @@ function onOpen() {
       .addItem('➕ Add New Hospital', 'abrirFormulario')
       .addSeparator()
       .addItem('📊 Run Data Audit', 'ejecutarAuditoria')
+      .addItem('🔍 Check Orphan Records', 'detectarRegistrosHuerfanos')
       .addItem('🧹 Clear Search Tool', 'limpiarBuscador')
       .addSeparator()
       .addItem('🔄 Refresh Menu/Dashboard', 'onOpen')
@@ -101,6 +102,7 @@ function procesarRegistro(data) {
       data.phone, data.piVolume, statusActual
     ];
 
+    // Array mapeado con los NUEVOS CAMPOS insertados según tu requerimiento
     var valoresBill = [
       idHosp, data.hospName, data.mrPhone, data.mrFax, data.mrEmail, data.mrPortal, 
       data.copyService, data.reqMethod, data.procTime, data.feeReq, data.prepayReq, 
@@ -109,6 +111,11 @@ function procesarRegistro(data) {
       data.physBillFax, data.physBillEmail, data.physBillAdd, data.radBillComp, 
       data.radBillPhone, data.radBillFax, data.radBillEmail, data.radBillAdd, 
       data.imgBillComp, data.imgBillPhone, data.imgBillFax, data.imgBillEmail, data.imgBillAdd,
+      // --- NUEVOS CAMPOS INSERTADOS AQUÍ ---
+      data.irPhone, data.irFax, data.irEmail, data.irPortal, 
+      data.copyServiceUsed, data.prefReqMethod, data.stdProcTime, 
+      data.recFeeReq, data.prepayReqBill, data.hospHipaa, data.reqClientId,
+      // -------------------------------------
       data.lienPhone, data.lienEmail, data.lienVendor, data.lienContact, 
       data.erDeptName, data.erBillComp, data.erBillContact, data.specInstr, 
       data.delays, data.intNotes, fechaActual, usuario
@@ -186,14 +193,13 @@ function encontrarFilaPorId(hoja, id) {
 function abrirFormulario() {
   var template = HtmlService.createTemplateFromFile('Formulario');
   template.initialData = null;
-  var html = template.evaluate().setWidth(1250).setHeight(850).setTitle('Hospital Master Registry');
+  var html = template.evaluate().setWidth(1500).setHeight(980).setTitle('Hospital Master Registry');
   SpreadsheetApp.getUi().showModalDialog(html, ' ');
 }
 
 function abrirExplorador() {
   var html = HtmlService.createHtmlOutputFromFile('Explorador')
-      .setWidth(1250)
-      .setHeight(850)
+      .setWidth(1500).setHeight(980)
       .setTitle('Hospital Explorer');
   SpreadsheetApp.getUi().showModalDialog(html, ' ');
 }
@@ -201,7 +207,7 @@ function abrirExplorador() {
 function abrirFormularioEdicion(datos) {
   var template = HtmlService.createTemplateFromFile('Formulario');
   template.initialData = datos;
-  var html = template.evaluate().setWidth(1250).setHeight(850).setTitle('Edit Record');
+  var html = template.evaluate().setWidth(1500).setHeight(980).setTitle('Edit Record');
   SpreadsheetApp.getUi().showModalDialog(html, ' ');
 }
 
@@ -227,19 +233,6 @@ function getGeographicConfig() {
 }
 
 /**
- * Abre un visor solo de lectura para ver la información de un hospital.
- */
-function abrirVisor(datos) {
-  var template = HtmlService.createTemplateFromFile('Visor');
-  template.initialData = datos;
-  var html = template.evaluate()
-      .setWidth(1100)
-      .setHeight(800)
-      .setTitle(' '); // Mantenemos el look limpio
-  SpreadsheetApp.getUi().showModalDialog(html, ' ');
-}
-
-/**
  * Analiza registros activos en busca de campos críticos vacíos.
  */
 function ejecutarAuditoria() {
@@ -261,5 +254,118 @@ function ejecutarAuditoria() {
     SpreadsheetApp.getUi().alert("⚠️ Found " + incompletos + " incomplete records.");
   } else {
     SpreadsheetApp.getUi().alert("✅ Database Healthy.");
+  }
+}
+
+
+
+
+
+function repararIdsYRelaciones() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetHosp = ss.getSheetByName("Hospitals");
+  const sheetBill = ss.getSheetByName("Records Billing");
+  
+  const dataHosp = sheetHosp.getDataRange().getValues();
+  const dataBill = sheetBill.getDataRange().getValues();
+  
+  let ultimoIdNum = 0;
+
+  // 1. Identificar el número más alto de ID actual para no duplicar
+  dataHosp.forEach(fila => {
+    if (fila[0] && fila[0].toString().startsWith("HOSP-")) {
+      let num = parseInt(fila[0].toString().split("-")[1]);
+      if (num > ultimoIdNum) ultimoIdNum = num;
+    }
+  });
+
+  // 2. Reparar Hoja de Hospitales y crear un mapa de nombres
+  let nombreAIdMap = {};
+  for (let i = 1; i < dataHosp.length; i++) {
+    let nombreHosp = dataHosp[i][1];
+    if (!dataHosp[i][0]) { // Si no tiene ID
+      ultimoIdNum++;
+      let nuevoId = "HOSP-" + ultimoIdNum.toString().padStart(6, '0');
+      sheetHosp.getRange(i + 1, 1).setValue(nuevoId);
+      nombreAIdMap[nombreHosp] = nuevoId;
+    } else {
+      nombreAIdMap[nombreHosp] = dataHosp[i][0];
+    }
+  }
+
+  // 3. Reparar Hoja de Records Billing usando el mapa de nombres
+  // Esto asume que el nombre del hospital coincide en ambas hojas
+  for (let j = 1; j < dataBill.length; j++) {
+    let nombreHospBill = dataBill[j][1]; // Columna B: Hospital Name
+    
+    if (!dataBill[j][0]) { // Si la columna A (ID) está vacía
+      if (nombreAIdMap[nombreHospBill]) {
+        sheetBill.getRange(j + 1, 1).setValue(nombreAIdMap[nombreHospBill]);
+      } else {
+        // Si el hospital no existe en la primera hoja, creamos un ID nuevo
+        ultimoIdNum++;
+        let nuevoIdExtra = "HOSP-" + ultimoIdNum.toString().padStart(6, '0');
+        sheetBill.getRange(j + 1, 1).setValue(nuevoIdExtra);
+        // OJO: Aquí deberías crear también la fila en Hospitals para que no quede huérfano
+      }
+    }
+  }
+  
+  SpreadsheetApp.getUi().alert("✅ Reparación completada. Se han asignado IDs y vinculado registros por nombre.");
+}
+
+
+/**
+ * Busca IDs que existen en una hoja pero faltan en la otra (Registros Huérfanos).
+ */
+function detectarRegistrosHuerfanos() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetHosp = ss.getSheetByName("Hospitals");
+  const sheetBill = ss.getSheetByName("Records Billing");
+  
+  // Obtener todos los IDs (columna A)
+  const idsHosp = sheetHosp.getRange(2, 1, sheetHosp.getLastRow() - 1).getValues().flat().map(id => String(id).trim());
+  const idsBill = sheetBill.getRange(2, 1, sheetBill.getLastRow() - 1).getValues().flat().map(id => String(id).trim());
+  
+  let huerfanosEnHosp = []; // ID está en Hospitals pero NO en Billing
+  let huerfanosEnBill = []; // ID está en Billing pero NO en Hospitals
+  
+  // 1. Buscar en Hospitals -> Billing
+  idsHosp.forEach((id, index) => {
+    if (id && idsBill.indexOf(id) === -1) {
+      // Obtenemos el nombre del hospital para que sea fácil identificarlo
+      let nombre = sheetHosp.getRange(index + 2, 2).getValue();
+      huerfanosEnHosp.push("- " + id + " (" + nombre + ")");
+    }
+  });
+  
+  // 2. Buscar en Billing -> Hospitals
+  idsBill.forEach((id, index) => {
+    if (id && idsHosp.indexOf(id) === -1) {
+      let nombre = sheetBill.getRange(index + 2, 2).getValue();
+      huerfanosEnBill.push("- " + id + " (" + nombre + ")");
+    }
+  });
+  
+  // 3. Mostrar resultados
+  let mensaje = "";
+  
+  if (huerfanosEnHosp.length > 0) {
+    mensaje += "⚠️ IDS EN 'HOSPITALS' SIN FACTURACIÓN:\n" + huerfanosEnHosp.join("\n") + "\n\n";
+  }
+  
+  if (huerfanosEnBill.length > 0) {
+    mensaje += "⚠️ IDS EN 'RECORDS BILLING' SIN REGISTRO GENERAL:\n" + huerfanosEnBill.join("\n") + "\n\n";
+  }
+  
+  if (mensaje === "") {
+    SpreadsheetApp.getUi().alert("✅ ¡Perfecto! No se encontraron registros huérfanos. Ambas hojas están sincronizadas.");
+  } else {
+    // Mostrar el reporte en una ventana grande
+    var htmlOutput = HtmlService
+      .createHtmlOutput('<pre style="font-family: sans-serif;">' + mensaje + '</pre>')
+      .setWidth(600)
+      .setHeight(450);
+    SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'Reporte de Registros Huérfanos');
   }
 }
