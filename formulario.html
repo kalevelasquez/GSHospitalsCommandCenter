@@ -13,43 +13,25 @@
       --bg: #f9fafb;
       --text-main: #1f2937;
       --border: #e5e7eb;
-      --hosp-color: #0f172a; /* Azul muy oscuro */
-      --mr-color: #0369a1;   /* Azul medio */
-      --bill-color: #334155; /* Gris azulado */
-      --track-color: #475569; /* Gris */
+      --hosp-color: #0f172a;
+      --mr-color: #0369a1;
+      --bill-color: #334155;
+      --track-color: #475569;
     }
-
     body { padding: 24px; background-color: var(--bg); font-family: 'Inter', sans-serif; color: var(--text-main); font-size: 0.85rem; }
-
     .id-badge { background: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 20px; display: none; border: 1px solid var(--border); color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-
-    .section-header { 
-      color: white; 
-      padding: 12px 16px; 
-      border-radius: 8px; 
-      margin: 24px 0 16px 0; 
-      font-size: 0.8rem; 
-      font-weight: 700;
-      text-transform: uppercase; 
-      letter-spacing: 0.05em;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    .section-header { color: white; padding: 12px 16px; border-radius: 8px; margin: 24px 0 16px 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .head-hosp { background-color: var(--hosp-color); }
     .head-mr { background-color: var(--mr-color); }
     .head-bill { background-color: var(--bill-color); }
     .head-track { background-color: var(--track-color); }
-
     .nav-tabs { border-bottom: 1px solid var(--border); gap: 8px; }
     .nav-link { border: none !important; color: #6b7280; font-weight: 500; padding: 10px 20px; border-radius: 8px 8px 0 0; }
     .nav-link.active { color: var(--primary) !important; border-bottom: 2px solid var(--primary) !important; background: transparent !important; }
-
     .tab-content { padding: 24px; border: 1px solid var(--border); border-top: none; background: white; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-
     label { display: block; font-weight: 600; margin-bottom: 6px; color: #374151; font-size: 0.8rem; }
-
     .form-control, .form-select { border-radius: 8px; border: 1px solid var(--border); padding: 8px 12px; font-size: 0.85rem; }
     .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); outline: none; }
-
     .btn-success { background-color: var(--primary); border: none; padding: 12px 30px; font-weight: 600; border-radius: 8px; }
     .btn-secondary { background-color: #fff; color: var(--text-main); border: 1px solid var(--border); padding: 12px 30px; font-weight: 600; border-radius: 8px; }
   </style>
@@ -134,6 +116,24 @@
           <div class="col-md-4"><label>Email</label><input type="text" name="imgBillEmail" class="form-control email-mask"></div>
           <div class="col-12"><label>Address</label><input type="text" name="imgBillAdd" class="form-control"></div>
         </div>
+
+        <div class="section-header head-mr">Imaging Records</div>
+        <div class="row g-3">
+          <div class="col-md-3"><label>IR Phone</label><input type="text" name="irPhone" class="form-control phone-mask"></div>
+          <div class="col-md-3"><label>IR Fax</label><input type="text" name="irFax" class="form-control phone-mask"></div>
+          <div class="col-md-3"><label>IR Email</label><input type="text" name="irEmail" class="form-control email-mask"></div>
+          <div class="col-md-3"><label>IR Portal</label><input type="text" name="irPortal" class="form-control"></div>
+          
+          <div class="col-md-4"><label>Copy Service Used</label><input type="text" name="copyServiceUsed" class="form-control"></div>
+          <div class="col-md-4"><label>Pref. Request Method</label><input type="text" name="prefReqMethod" class="form-control"></div>
+          <div class="col-md-4"><label>Std. Processing Time</label><input type="text" name="stdProcTime" class="form-control"></div>
+          
+          <div class="col-md-3"><label>Fee Req?</label><select name="recFeeReq" class="form-select"><option value=""></option><option value="No">No</option><option value="Yes">Yes</option></select></div>
+          <div class="col-md-3"><label>Prepayment Req?</label><select name="prepayReqBill" class="form-select"><option value=""></option><option value="No">No</option><option value="Yes">Yes</option></select></div>
+          <div class="col-md-3"><label>Requires HIPAA?</label><select name="hospHipaa" class="form-select"><option value=""></option><option value="No">No</option><option value="Yes">Yes</option></select></div>
+          <div class="col-md-3"><label>Requires Client ID?</label><select name="reqClientId" class="form-select"><option value=""></option><option value="No">No</option><option value="Yes">Yes</option></select></div>
+        </div>
+
         <div class="section-header head-track">Lien / Subrogation</div>
         <div class="row g-3">
           <div class="col-md-6"><label>Phone</label><input type="text" name="lienPhone" class="form-control phone-mask"></div>
@@ -141,15 +141,15 @@
           <div class="col-md-6"><label>Vendor</label><input type="text" name="lienVendor" class="form-control"></div>
           <div class="col-md-6"><label>Contact Info</label><input type="text" name="lienContact" class="form-control"></div>
         </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab4">
         <div class="section-header head-track">Emergency Room</div>
         <div class="row g-3">
           <div class="col-md-4"><label>ER Dept Name</label><input type="text" name="erDeptName" class="form-control"></div>
           <div class="col-md-4"><label>ER Billing Co</label><input type="text" name="erBillComp" class="form-control"></div>
           <div class="col-md-4"><label>ER Contact</label><input type="text" name="erBillContact" class="form-control"></div>
         </div>
-      </div>
-
-      <div class="tab-pane fade" id="tab4">
         <div class="section-header head-track">Operational Tracking</div>
         <div class="row g-3">
           <div class="col-12"><label>Special Submission Instructions</label><textarea name="specInstr" class="form-control" rows="3"></textarea></div>
@@ -178,8 +178,7 @@
         const stateSelect = document.getElementById('stateSelect');
         Object.keys(geoData).forEach(state => {
           let opt = document.createElement('option');
-          opt.value = state;
-          opt.innerHTML = state;
+          opt.value = state; opt.innerHTML = state;
           stateSelect.appendChild(opt);
         });
         if (window.initialData) cargarDatosEdicion(window.initialData);
@@ -193,8 +192,7 @@
       if (state && geoData[state]) {
         geoData[state].forEach(county => {
           let opt = document.createElement('option');
-          opt.value = county;
-          opt.innerHTML = county;
+          opt.value = county; opt.innerHTML = county;
           countySelect.appendChild(opt);
         });
         if(selectedCounty) countySelect.value = selectedCounty;
@@ -206,7 +204,6 @@
       document.getElementById('idHosp').value = info.hosp[0];
       document.getElementById('idDisplay').innerText = "EDITING ID: " + info.hosp[0];
       document.getElementById('idDisplay').style.display = "block";
-      
       const f = document.getElementById('masterForm');
       f.hospName.value = info.hosp[1] || "";
       f.state.value = info.hosp[2] || "";
@@ -220,60 +217,49 @@
       f.piVolume.value = info.hosp[10] || "";
 
       if (info.bill) {
-        f.mrPhone.value = info.bill[2] || "";
-        f.mrFax.value = info.bill[3] || "";
-        f.mrEmail.value = info.bill[4] || "";
-        f.mrPortal.value = info.bill[5] || "";
-        f.copyService.value = info.bill[6] || "";
-        f.reqMethod.value = info.bill[7] || "";
-        f.procTime.value = info.bill[8] || "";
-        f.feeReq.value = info.bill[9] || "";
-        f.prepayReq.value = info.bill[10] || "";
-        f.hipaaForm.value = info.bill[11] || "";
-        f.clientId.value = info.bill[12] || "";
-        f.hospBillPhone.value = info.bill[13] || "";
-        f.hospBillFax.value = info.bill[14] || "";
-        f.hospBillEmail.value = info.bill[15] || "";
-        f.hospBillAdd.value = info.bill[16] || "";
-        f.physBillComp.value = info.bill[17] || "";
-        f.physBillPhone.value = info.bill[18] || "";
-        f.physBillFax.value = info.bill[19] || "";
-        f.physBillEmail.value = info.bill[20] || "";
-        f.physBillAdd.value = info.bill[21] || "";
-        f.radBillComp.value = info.bill[22] || "";
-        f.radBillPhone.value = info.bill[23] || "";
-        f.radBillFax.value = info.bill[24] || "";
-        f.radBillEmail.value = info.bill[25] || "";
-        f.radBillAdd.value = info.bill[26] || "";
-        f.imgBillComp.value = info.bill[27] || "";
-        f.imgBillPhone.value = info.bill[28] || "";
-        f.imgBillFax.value = info.bill[29] || "";
-        f.imgBillEmail.value = info.bill[30] || "";
-        f.imgBillAdd.value = info.bill[31] || "";
-        f.lienPhone.value = info.bill[32] || "";
-        f.lienEmail.value = info.bill[33] || "";
-        f.lienVendor.value = info.bill[34] || "";
-        f.lienContact.value = info.bill[35] || "";
-        f.erDeptName.value = info.bill[36] || "";
-        f.erBillComp.value = info.bill[37] || "";
-        f.erBillContact.value = info.bill[38] || "";
-        f.specInstr.value = info.bill[39] || "";
-        f.delays.value = info.bill[40] || "";
-        f.intNotes.value = info.bill[41] || "";
+        // Mapeo original
+        f.mrPhone.value = info.bill[2] || ""; f.mrFax.value = info.bill[3] || "";
+        f.mrEmail.value = info.bill[4] || ""; f.mrPortal.value = info.bill[5] || "";
+        f.copyService.value = info.bill[6] || ""; f.reqMethod.value = info.bill[7] || "";
+        f.procTime.value = info.bill[8] || ""; f.feeReq.value = info.bill[9] || "";
+        f.prepayReq.value = info.bill[10] || ""; f.hipaaForm.value = info.bill[11] || "";
+        f.clientId.value = info.bill[12] || ""; f.hospBillPhone.value = info.bill[13] || "";
+        f.hospBillFax.value = info.bill[14] || ""; f.hospBillEmail.value = info.bill[15] || "";
+        f.hospBillAdd.value = info.bill[16] || ""; f.physBillComp.value = info.bill[17] || "";
+        f.physBillPhone.value = info.bill[18] || ""; f.physBillFax.value = info.bill[19] || "";
+        f.physBillEmail.value = info.bill[20] || ""; f.physBillAdd.value = info.bill[21] || "";
+        f.radBillComp.value = info.bill[22] || ""; f.radBillPhone.value = info.bill[23] || "";
+        f.radBillFax.value = info.bill[24] || ""; f.radBillEmail.value = info.bill[25] || "";
+        f.radBillAdd.value = info.bill[26] || ""; f.imgBillComp.value = info.bill[27] || "";
+        f.imgBillPhone.value = info.bill[28] || ""; f.imgBillFax.value = info.bill[29] || "";
+        f.imgBillEmail.value = info.bill[30] || ""; f.imgBillAdd.value = info.bill[31] || "";
+        
+        // --- MAPEADO DE NUEVOS CAMPOS (Basado en la posición del gs) ---
+        f.irPhone.value = info.bill[32] || ""; f.irFax.value = info.bill[33] || "";
+        f.irEmail.value = info.bill[34] || ""; f.irPortal.value = info.bill[35] || "";
+        f.copyServiceUsed.value = info.bill[36] || ""; f.prefReqMethod.value = info.bill[37] || "";
+        f.stdProcTime.value = info.bill[38] || ""; f.recFeeReq.value = info.bill[39] || "";
+        f.prepayReqBill.value = info.bill[40] || ""; f.hospHipaa.value = info.bill[41] || "";
+        f.reqClientId.value = info.bill[42] || "";
+
+        // Los campos siguientes se desplazan
+        f.lienPhone.value = info.bill[43] || ""; f.lienEmail.value = info.bill[44] || "";
+        f.lienVendor.value = info.bill[45] || ""; f.lienContact.value = info.bill[46] || "";
+        f.erDeptName.value = info.bill[47] || ""; f.erBillComp.value = info.bill[48] || "";
+        f.erBillContact.value = info.bill[49] || ""; f.specInstr.value = info.bill[50] || "";
+        f.delays.value = info.bill[51] || ""; f.intNotes.value = info.bill[52] || "";
       }
     }
 
     function enviar() {
       const form = document.getElementById('masterForm');
       if(!form.hospName.value) return Swal.fire('Error', 'Hospital Name is required', 'error');
-
       const emailInputs = document.querySelectorAll('.email-mask');
       for(let email of emailInputs){
         if(email.value && !$(email).inputmask("isComplete")){
           return Swal.fire('Invalid Email', 'Please check the email format', 'warning');
         }
       }
-
       Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       const data = {};
       new FormData(form).forEach((v, k) => data[k] = v);
